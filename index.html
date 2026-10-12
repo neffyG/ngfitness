@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#04060B">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ascend">
+  <title>Ascend</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Chakra+Petch:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="top">
+    <div>
+      <p class="eyebrow" id="today-date"></p>
+      <p class="logo">ASCEND<span>// SYSTEM</span></p>
+    </div>
+    <button class="icon-btn" id="settings-btn" aria-label="Settings">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </header>
+
+  <main>
+    <!-- STATUS -->
+    <section class="view" id="view-status">
+      <div class="panel player" id="player"></div>
+
+      <div class="panel sys quests" id="quests"></div>
+
+      <div class="panel hero">
+        <div class="panel-tag">BODY</div>
+        <div class="hero-row">
+          <div>
+            <p class="label">Lost so far</p>
+            <p class="big" id="stat-lost">—</p>
+            <p class="proj" id="stat-proj"></p>
+          </div>
+          <div class="ring-wrap">
+            <svg class="ring" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="52" class="ring-bg"/>
+              <circle cx="60" cy="60" r="52" class="ring-fg" id="ring-fg"/>
+            </svg>
+            <div class="ring-text"><span id="stat-pct">0%</span><small>to goal</small></div>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div><p class="label">Start</p><p class="mid" id="stat-start">—</p></div>
+          <div><p class="label">Current</p><p class="mid" id="stat-current">—</p></div>
+          <div><p class="label">Goal</p><p class="mid" id="stat-goal">—</p></div>
+          <div><p class="label">To go</p><p class="mid" id="stat-togo">—</p></div>
+        </div>
+        <form id="weigh-form" class="weigh-form">
+          <div class="weigh-row">
+            <input id="weigh-input" type="number" inputmode="decimal" step="0.1" min="50" max="700" placeholder="Today's weight" required>
+            <span class="unit">lb</span>
+            <button type="submit" class="btn primary">Log</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="card-head">
+          <h2>Weight</h2>
+          <div class="seg" id="range-seg">
+            <button data-r="30">1M</button>
+            <button data-r="90" class="on">3M</button>
+            <button data-r="0">All</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="chart"></canvas><p class="empty" id="chart-empty">Log two weigh-ins to see your graph.</p></div>
+        <div class="mini-stats">
+          <div><p class="label">This week</p><p class="mid" id="stat-week">—</p></div>
+          <div><p class="label">Avg / week</p><p class="mid" id="stat-rate">—</p></div>
+          <div><p class="label">Streak</p><p class="mid" id="stat-streak">—</p></div>
+        </div>
+      </div>
+
+      <button class="panel today-link" id="today-link">
+        <div>
+          <p class="label">Today's training</p>
+          <p class="today-title" id="today-title">—</p>
+          <p class="today-sub" id="today-sub"></p>
+        </div>
+        <div class="today-progress" id="today-progress">0%</div>
+      </button>
+
+      <div class="panel" id="weekly"></div>
+    </section>
+
+    <!-- TRAIN -->
+    <section class="view" id="view-train" hidden>
+      <div class="rail" id="rail"></div>
+      <div class="day-head">
+        <p class="label" id="day-kicker"></p>
+        <h2 id="day-title"></h2>
+        <p id="day-sub"></p>
+        <div class="bar"><div class="bar-fill" id="day-bar"></div></div>
+      </div>
+      <div id="blocks"></div>
+      <details class="panel limits">
+        <summary>⚠ Hard limits</summary>
+        <ul id="limits"></ul>
+      </details>
+    </section>
+
+    <!-- FUEL -->
+    <section class="view" id="view-fuel" hidden>
+      <div class="panel">
+        <div class="panel-tag">FUEL</div>
+        <div class="card-head"><h2>End-of-day log</h2>
+          <div class="seg" id="fuel-day"><button data-o="0" class="on">Today</button><button data-o="-1">Yesterday</button></div>
+        </div>
+        <p class="muted small">Copy your totals from Lifesum's diary at the end of the day.</p>
+        <form id="fuel-form" class="fuel-form">
+          <label><span>Calories</span><input id="fuel-kcal" type="number" inputmode="numeric" placeholder="kcal" min="0" max="10000"></label>
+          <label><span>Protein</span><input id="fuel-protein" type="number" inputmode="numeric" placeholder="g (optional)" min="0" max="600"></label>
+          <button class="btn primary" type="submit">Save</button>
+        </form>
+      </div>
+
+      <div class="panel" id="fuel-summary"></div>
+
+      <div class="panel">
+        <div class="card-head"><h2>Last 21 days</h2><span class="muted small" id="fuel-legend"></span></div>
+        <div class="chart-wrap small"><canvas id="fuel-chart"></canvas><p class="empty" id="fuel-empty">Log a few days to see the chart.</p></div>
+      </div>
+
+      <div class="panel sys" id="tdee"></div>
+    </section>
+
+    <!-- RECORDS -->
+    <section class="view" id="view-records" hidden>
+      <div class="panel">
+        <div class="card-head"><h2>Achievements</h2><span class="muted small" id="ach-count"></span></div>
+        <div class="ach-grid" id="ach-grid"></div>
+      </div>
+      <div class="panel">
+        <div class="card-head"><h2>Personal records</h2></div>
+        <ul class="log-list" id="pr-list"></ul>
+      </div>
+      <div class="panel">
+        <div class="card-head"><h2>Weigh-ins</h2></div>
+        <ul class="log-list" id="log-list"></ul>
+        <p class="empty static" id="log-empty">No weigh-ins yet.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- rest timer -->
+  <div class="rest" id="rest" hidden>
+    <span class="rest-l">REST</span><span class="rest-t" id="rest-t">1:30</span>
+    <button id="rest-add">+15s</button><button id="rest-skip">Skip</button>
+    <i class="rest-bar" id="rest-bar"></i>
+  </div>
+
+  <nav class="tabbar">
+    <button data-view="status" class="on">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 .9-4.5 4.3 1 6.3L12 16.6 6.5 19.5l1-6.3L3 8.9 9 8z"/></svg>
+      <span>Status</span>
+    </button>
+    <button data-view="train">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>
+      <span>Train</span>
+    </button>
+    <button data-view="fuel">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2c2 4 6 6 6 11a6 6 0 0 1-12 0c0-3 2-4 2-7 2 1 3 2 4 4 0-3-1-5 0-8z"/></svg>
+      <span>Fuel</span>
+    </button>
+    <button data-view="records">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/></svg>
+      <span>Records</span>
+    </button>
+  </nav>
+
+  <!-- EXERCISE SHEET -->
+  <dialog id="figsheet"><form method="dialog" class="sheet fig-sheet" id="fig-form"></form></dialog>
+
+  <!-- SETTINGS -->
+  <dialog id="settings">
+    <form method="dialog" class="sheet" id="settings-form">
+      <h2>Settings</h2>
+      <label>Player name<input id="set-name" type="text"></label>
+      <div class="sheet-row">
+        <label>Start weight (lb)<input id="set-start" type="number" step="0.1" inputmode="decimal"></label>
+        <label>Goal weight (lb)<input id="set-goal" type="number" step="0.1" inputmode="decimal"></label>
+      </div>
+      <div class="sheet-row">
+        <label>Calorie target<input id="set-kcal" type="number" inputmode="numeric" placeholder="from Lifesum"></label>
+        <label>Protein target (g)<input id="set-protein" type="number" inputmode="numeric"></label>
+      </div>
+      <label>Rest timer (seconds)<input id="set-rest" type="number" inputmode="numeric" min="15" max="600"></label>
+      <div class="sheet-row">
+        <button type="button" class="btn" id="export-btn">Export backup</button>
+        <label class="btn file-btn">Import<input type="file" id="import-file" accept="application/json" hidden></label>
+      </div>
+      <div class="sheet-row">
+        <button value="cancel" class="btn">Cancel</button>
+        <button value="save" class="btn primary">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- LEVEL UP -->
+  <div class="overlay" id="levelup" hidden>
+    <div class="lv-box">
+      <p class="lv-sys">[ SYSTEM ]</p>
+      <h2 class="lv-h">LEVEL UP</h2>
+      <p class="lv-num" id="lv-num"></p>
+      <p class="lv-rank" id="lv-rank"></p>
+      <button class="btn primary" id="lv-ok">Continue</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
