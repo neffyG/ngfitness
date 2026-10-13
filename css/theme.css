@@ -1,0 +1,93 @@
+/* ARISE — leveling-game System, painted like a Ghibli dusk / storybook adventure */
+:root {
+  --bg: #121A33;
+  --panel: rgba(24, 33, 64, .78);
+  --panel-solid: #1A2446;
+  --card-2: rgba(39, 51, 92, .72);
+  --line: rgba(122, 146, 204, .26);
+  --line-hi: #6F86C4;
+  --ink: #F3EEDF;           /* warm parchment white */
+  --mid: #9EA9C8;
+  --accent: #F6C863;        /* lantern gold */
+  --accent-2: #57D3F2;      /* spirit blue */
+  --accent-soft: rgba(246, 200, 99, .14);
+  --accent-ink: #261B05;
+  --sys: #6FDCF5;           /* System windows */
+  --gold: #F6C863;
+  --goal: #8FD18B;
+  --down: #8FD18B;          /* leaf green */
+  --up: #F2836E;
+  --track: rgba(10, 15, 32, .6);
+  --xp-fill: linear-gradient(90deg, #8FD18B, #57D3F2 55%, #A98BFF);
+  --hp-fill: linear-gradient(90deg, #F25F6E, #F59A6C);
+  --fig1: #F6C863; --fig2: #57D3F2; --fig-bg: radial-gradient(120% 90% at 50% 100%, rgba(87, 211, 242, .12), rgba(14, 20, 40, .7));
+  --boss-bg: radial-gradient(circle at 50% 35%, rgba(242, 95, 110, .25), rgba(20, 27, 51, .9));
+  --won-bg: radial-gradient(circle at 50% 35%, rgba(143, 209, 139, .35), rgba(20, 27, 51, .9));
+  --seg-on: rgba(246, 200, 99, .14);
+  --tag-bg: #1A2446;
+  --tabbar-bg: rgba(21, 29, 57, .9);
+  --tip-bg: #F3EEDF; --tip-ink: #1A2446;
+  --backdrop: rgba(6, 9, 20, .72);
+  --radius: 22px; --check-r: 8px;
+  --shadow: 0 10px 30px rgba(3, 6, 18, .35), inset 0 1px 0 rgba(255, 255, 255, .05);
+  --shadow-lg: 0 14px 40px rgba(3, 6, 18, .55);
+  --btn-glow: 0 0 18px rgba(246, 200, 99, .35);
+  --today-mark: "✦";
+  --font-display: "Cinzel", Georgia, serif;
+  --font-body: "Nunito", system-ui, sans-serif;
+  --font-num: "Nunito", system-ui, sans-serif;
+  color-scheme: dark;
+}
+body { background: linear-gradient(180deg, #0E1530 0%, #1B2550 45%, #3B3D6B 75%, #6A4F70 100%) fixed; }
+
+/* the painted scene behind everything */
+.scene { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.scene .sky { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 62vh; }
+.moon { position: absolute; top: 9vh; right: 14%; width: 46px; height: 46px; border-radius: 50%; background: #FFF3CF; box-shadow: 0 0 40px 10px rgba(255, 233, 168, .35); }
+.moon::after { content: ""; position: absolute; inset: -2px 10px 6px -10px; border-radius: 50%; background: #18214A; opacity: .9; }
+.stars b { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #FFF3CF; animation: twinkle 3.6s ease-in-out infinite; }
+.flies b { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #FFE58A; box-shadow: 0 0 10px 3px rgba(255, 229, 138, .7); animation: fly 7s ease-in-out infinite; opacity: 0; }
+@keyframes twinkle { 50% { opacity: .25; } }
+@keyframes fly { 0% { opacity: 0; transform: translate(0, 0); } 25% { opacity: 1; } 50% { transform: translate(18px, -26px); } 75% { opacity: .9; } 100% { opacity: 0; transform: translate(-10px, -50px); } }
+
+.logo { font-size: 30px; letter-spacing: .2em; background: linear-gradient(180deg, #FFF3CF, #F6C863 60%, #D9963F); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 24px rgba(246, 200, 99, .25); }
+.logo span { display: block; font-family: var(--font-body); font-size: 11px; letter-spacing: .28em; -webkit-text-fill-color: var(--sys); font-weight: 800; margin-top: 2px; }
+
+.panel { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+h2 { letter-spacing: .03em; }
+
+/* the "System" windows: softly glowing, double-bordered like a game menu */
+.sys { background: linear-gradient(180deg, rgba(36, 76, 120, .55), rgba(18, 26, 56, .85)); border: 1px solid rgba(111, 220, 245, .55);
+  box-shadow: inset 0 0 0 4px rgba(18, 26, 56, .7), inset 0 0 0 5px rgba(111, 220, 245, .25), 0 0 26px rgba(111, 220, 245, .18); }
+.sys-head { text-shadow: 0 0 12px rgba(111, 220, 245, .6); }
+.toast { border-color: var(--sys); box-shadow: 0 0 24px rgba(111, 220, 245, .3); }
+
+.emblem svg { width: 100%; height: 100%; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--rk) 50%, transparent)); }
+.pm-av svg { width: 50px; height: 56px; }
+.p-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; margin-top: 12px; color: var(--mid); font-size: 12.5px; }
+.p-meta b { color: var(--ink); }
+.p-stats div { background: rgba(14, 20, 42, .55); }
+.p-stats b { color: var(--accent); }
+
+.streak-n { color: #F25F6E; text-shadow: 0 0 18px rgba(242, 95, 110, .35); }
+.beat { animation: beat 1.6s ease-in-out infinite; }
+@keyframes beat { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.12); } 30% { transform: scale(1); } }
+
+.fg-limb { filter: drop-shadow(0 0 2.5px rgba(246, 200, 99, .55)); }
+.fg-limb.far { filter: drop-shadow(0 0 2.5px rgba(87, 211, 242, .5)); }
+.fig-big { background: radial-gradient(90% 70% at 50% 110%, rgba(143, 209, 139, .18), transparent 60%), radial-gradient(120% 100% at 50% 0%, #253262, #141B36); }
+.fig-big::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(1.5px 1.5px at 20% 30%, #FFF3CF, transparent), radial-gradient(1.5px 1.5px at 70% 20%, #FFF3CF, transparent), radial-gradient(1.5px 1.5px at 85% 55%, #FFF3CF, transparent), radial-gradient(1.5px 1.5px at 35% 60%, #FFF3CF, transparent); opacity: .6; }
+.fig-badge { color: var(--sys); }
+
+.btn.primary { background: linear-gradient(180deg, #FFD983, #F2B544); }
+.rail button.on { box-shadow: 0 0 14px rgba(246, 200, 99, .4); }
+.block-t { color: #FFF3CF; }
+.b-name { color: #FFF3CF; }
+
+/* level up / gate popups */
+.ov-box { background: linear-gradient(180deg, rgba(36, 76, 120, .7), rgba(16, 22, 48, .96)); border: 1px solid rgba(111, 220, 245, .6); border-radius: 24px;
+  box-shadow: inset 0 0 0 5px rgba(16, 22, 48, .8), inset 0 0 0 6px rgba(111, 220, 245, .3), 0 0 60px rgba(111, 220, 245, .35); }
+.ov-k { color: var(--sys); }
+.ov-h { color: #FFF3CF; letter-spacing: .08em; }
+.ov-h.glow { font-size: 44px; text-shadow: 0 0 24px #F6C863, 0 0 4px #fff; }
+.ov-num { margin: 0; font-family: var(--font-display); font-size: 20px; }

@@ -282,7 +282,12 @@ export function figureSvg(key, big = false) {
     line(A, B, ["n", "e1"], "fg-limb"), line(A, B, ["e1", "w1"], "fg-limb"),
   ].join("");
   const head = `<circle class="fg-head" cx="${f1(A.h[0])}" cy="${f1(A.h[1])}" r="5.6">${anim("cx", A.h[0], B.h[0], MID?.h[0])}${anim("cy", A.h[1], B.h[1], MID?.h[1])}</circle>`;
-  return `<svg class="fig-svg${big ? " big" : ""}" viewBox="0 0 120 100" aria-hidden="true"><line class="fg-floor" x1="2" y1="92.8" x2="118" y2="92.8"/>${back}${body}${head}${front}</svg>`;
+  // soft shadow on the floor that follows the hips
+  const sh = `<ellipse class="fg-shadow" cx="${f1(A.p[0])}" cy="93" rx="16" ry="2.6">${anim("cx", A.p[0], B.p[0], MID?.p[0])}</ellipse>`;
+  // a faint "ghost" of the end position so you can see where the move goes
+  const ghost = big ? `<g class="fg-ghost">${[["n","p"],["p","k1"],["k1","a1"],["p","k2"],["k2","a2"],["n","e1"],["e1","w1"],["n","e2"],["e2","w2"]].map(([x, y]) => `<line x1="${f1(B[x][0])}" y1="${f1(B[x][1])}" x2="${f1(B[y][0])}" y2="${f1(B[y][1])}"/>`).join("")}<circle cx="${f1(B.h[0])}" cy="${f1(B.h[1])}" r="5.6"/></g>` : "";
+  return `<svg class="fig-svg${big ? " big" : ""}" viewBox="0 0 120 100" aria-hidden="true"><line class="fg-floor" x1="2" y1="92.8" x2="118" y2="92.8"/>${sh}${back}${ghost}${body}${head}${front}</svg>`;
 }
 
 export const FIGURE_KEYS = Object.keys(F);
+export const hasFigure = (k) => !!F[k];

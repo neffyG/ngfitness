@@ -155,3 +155,30 @@ export const HARD_LIMITS = [
   "Brace, then breathe. Don't hold your breath under strain.",
   "New leg pain, numbness or tingling → drop it and call your surgeon. Leg weakness, groin numbness or bladder/bowel changes → ER.",
 ];
+
+/* ---------- how a day is built ---------- */
+import { makePlan } from "./plan.js";
+export const PLAN = makePlan({
+  DAYS, SCHEDULE,
+  blocks: (day) => {
+    const b = [WAKE, WORK];
+    if (day.rest) b.push({ t: "Move", w: "Anywhere · 30 min", main: true, items: day.items });
+    else b.push(
+      { t: "Before you lift", w: "At the gym · 10 min", main: true, note: "This block is the program. If a session has to be short, cut from the lifting, never from here.", items: day.prep },
+      { t: "Lift", w: "At the gym · 45–60 min", main: true, lift: true, items: day.items },
+      { ...FINISH, main: true },
+    );
+    b.push(BED);
+    return b;
+  },
+});
+
+// Default daily mobility quest (editable in the app). fig = picture.
+export const DEFAULT_MOVES = [
+  { id: "m-fig4", n: "Figure-4 glute stretch", s: "30 sec / side", fig: "fig4" },
+  { id: "m-towel", n: "Towel hamstring stretch, lying", s: "30 sec / side", fig: "towelHam" },
+  { id: "m-bridge", n: "Glute bridge", s: "2 × 15", fig: "bridge" },
+  { id: "m-birddog", n: "Bird dog", s: "2 × 8 / side", fig: "birdDog" },
+  { id: "m-flexor", n: "Half-kneeling hip flexor stretch", s: "45 sec / side", fig: "hipFlexor" },
+  { id: "m-ankle", n: "Knee-to-wall ankle rock", s: "10 / side", fig: "ankleRock" },
+];
