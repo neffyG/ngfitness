@@ -31,6 +31,10 @@ const ICONS = {
   body: `<path d="M20 12a8 8 0 1 1-16 0 8 8 0 0 1 16 0z"/><path d="M12 8v4l3 2"/>`,
   heart: `<path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0 1 12 6a5.5 5.5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/>`,
   cycle: `<path d="M12 3c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11z"/>`,
+  book: `<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/>`,
+  cross: `<path d="M12 2v20M6 8h12"/>`,
+  sun: `<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>`,
+  flame: `<path d="M12 22c4 0 7-3 7-7 0-5-5-7-5-12-3 2-5 5-5 8-1-1-2-2-2-4-2 2-2 5-2 8 0 4 3 7 7 7z"/>`,
   gear: `<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>`,
 };
 export const icon = (k, s = 22) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[k] || ICONS.status}</svg>`;
@@ -45,7 +49,8 @@ export function startApp({ cfg, plan, extra = {} }) {
   let state = load();
   const save = () => { try { localStorage.setItem(cfg.storageKey, JSON.stringify(state)); } catch {} };
   let G = compute(state, cfg, plan);
-  const ctx = { cfg, plan, get state() { return state; }, get G() { return G; }, save, toast, render: () => render(), show: (v) => show(v), esc, md, wmd, plural, fmt, num, $, $$, setupCanvas, css, openSheet };
+  const ctx = { cfg, plan, get state() { return state; }, get G() { return G; }, save, toast, render: () => render(), show: (v) => show(v), esc, md, wmd, plural, fmt, num, $, $$, setupCanvas, css, openSheet,
+    popup: (h) => popup(h), get current() { return current; }, figureSvg, hasFigure, openFig: (it) => openFig(it), goTrain: (seg, type) => { trainSeg = seg || "workout"; if (type) cardioType = type; selectedDay = plan.todayId(); show("train"); } };
 
   /* ---------- toast + popups ---------- */
   function toast(msg, ms = 2400) {
@@ -98,7 +103,7 @@ export function startApp({ cfg, plan, extra = {} }) {
     </header>
     <main>${cfg.tabs.map((t) => `<section class="view" id="view-${t.id}" hidden>${extraTabs[t.id]?.html || ""}</section>`).join("")}</main>
     <div class="rest" id="rest" hidden><span class="rest-l">${esc(T.rest)}</span><span class="rest-t" id="rest-t">1:30</span><button id="rest-add">+15s</button><button id="rest-skip">Skip</button><i class="rest-bar" id="rest-bar"></i></div>
-    <nav class="tabbar">${cfg.tabs.map((t, i) => `<button data-view="${t.id}" class="${i ? "" : "on"}">${icon(t.icon)}<span>${esc(t.label)}</span></button>`).join("")}</nav>
+    <nav class="tabbar">${cfg.tabs.filter((t) => !t.hidden).map((t, i) => `<button data-view="${t.id}" class="${i ? "" : "on"}">${icon(t.icon)}<span>${esc(t.label)}</span></button>`).join("")}</nav>
     <dialog id="sheet"><form method="dialog" class="sheet" id="sheet-form"></form></dialog>
     <div class="overlay" id="overlay" hidden><div class="ov-box" id="ov-box"></div></div>
     <div class="toast" id="toast"></div>
@@ -108,7 +113,8 @@ export function startApp({ cfg, plan, extra = {} }) {
   function show(view) {
     current = view;
     $$(".view").forEach((v) => (v.hidden = v.id !== `view-${view}`));
-    $$(".tabbar button").forEach((b) => b.classList.toggle("on", b.dataset.view === view));
+    const navId = cfg.tabs.find((t) => t.id === view)?.navAs || view;
+    $$(".tabbar button").forEach((b) => b.classList.toggle("on", b.dataset.view === navId));
     window.scrollTo({ top: 0 });
     render();
   }
@@ -665,7 +671,8 @@ export function startApp({ cfg, plan, extra = {} }) {
     const P = state.partner;
     v.innerHTML = `
       <div class="panel sys"><p class="sys-head">${esc(T.bossHead)}</p><p class="sys-sub" style="margin-bottom:0">${esc(T.bossSub)} · ${won}/${G.bosses.length} ${esc(T.bossCleared)}</p></div>
-      <div class="boss-list">${solo.map(bossCard).join("")}</div>
+      ${(() => { const groups = []; solo.forEach((b) => { const g = b.group || "Training"; let x = groups.find((y) => y.g === g); if (!x) groups.push((x = { g, list: [] })); x.list.push(b); });
+        return groups.map((x) => `${groups.length > 1 ? `<p class="label gate-group">${esc(x.g)} · ${x.list.filter((b) => b.earned).length}/${x.list.length}</p>` : ""}<div class="boss-list">${x.list.map(bossCard).join("")}</div>`).join(""); })()}
 
       <div class="panel party">
         <div class="panel-tag">${esc(T.duoTag)}</div>

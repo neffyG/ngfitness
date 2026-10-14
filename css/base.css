@@ -348,3 +348,4 @@ dialog::backdrop { background: var(--backdrop); backdrop-filter: blur(4px); }
 .view { animation: fade .25s ease-out; }
 @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+.gate-group { margin: 6px 4px 10px; color: var(--accent); }

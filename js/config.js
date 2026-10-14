@@ -1,5 +1,6 @@
 // ARISE — everything that makes this app "yours": names, ranks, gates, loot, wording.
 import { DEFAULT_MOVES } from "./workouts.js";
+import { lifeCompute, LIFE_BOSSES, LIFE_LOOT } from "./life.js";
 
 const heart = (kind) => {
   const P = "M12 21C5.2 15.6 1.2 12.1 1.2 7.3A5.3 5.3 0 0 1 12 5a5.3 5.3 0 0 1 10.8 2.3c0 4.8-4 8.3-10.8 13.7z";
@@ -14,13 +15,19 @@ export const CFG = {
   id: "arise", codePrefix: "ARISE", partnerPrefix: "BLOOM",
   storageKey: "fit:neftali", defaultName: "Neftali", weeklyMi: 10,
   xpName: "XP",
-  logoHtml: `ARISE<span>✦ the System</span>`,
+  logoHtml: `ARISE<span>✦ the System · body · mind · spirit</span>`,
   tabs: [
     { id: "home", label: "Status", icon: "status" },
     { id: "train", label: "Train", icon: "train" },
+    { id: "faith", label: "Faith", icon: "cross" },
+    { id: "books", label: "Books", icon: "book" },
+    { id: "hard", label: "75", icon: "flame" },
     { id: "bosses", label: "Gates", icon: "bosses" },
     { id: "body", label: "Body", icon: "heart" },
+    { id: "habits", label: "Habits", icon: "status", hidden: true, navAs: "home" },
+    { id: "report", label: "Report", icon: "status", hidden: true, navAs: "home" },
   ],
+  extend: (state, today, ext) => lifeCompute(state, today, ext),
   ranks: [
     { name: "E-Rank Hunter", r: "E", min: 1, c: "#A9B6CE" },
     { name: "D-Rank Hunter", r: "D", min: 6, c: "#8FD18B" },
@@ -37,11 +44,14 @@ export const CFG = {
     <text x="36" y="${rk.r.length > 1 ? 50 : 51}" text-anchor="middle" font-family="Cinzel, serif" font-weight="700" font-size="${rk.r === "♛" ? 30 : 32}" fill="${rk.c}">${rk.r}</text></svg>`,
   playerExtra: (G, state) => {
     const mobMoves = Object.values(state.mob).reduce((s, a) => s + a.length, 0);
+    const L = G.life;
     const stat = {
       STR: 10 + Math.floor(G.lifts.sets / 10) + G.lifts.prs,
       AGI: 10 + Math.floor(mobMoves / 10),
       VIT: 10 + Math.floor(state.weights.length / 5) + Math.floor(G.calLogs / 5),
-      END: 10 + G.gymDays + Math.floor(G.miles / 5),
+      END: 10 + G.gymDays + Math.floor(G.miles / 5) + (L ? L.hard.bestCleared : 0),
+      INT: 10 + (L ? Math.floor(L.books.pages / 100) + L.books.finishes * 2 : 0),
+      FTH: 10 + (L ? Math.floor(L.faith.totalCh / 5) + Math.floor(L.faith.prayerDays / 3) + L.faith.answered : 0),
     };
     return `<div class="p-stats">${Object.entries(stat).map(([k, v]) => `<div><b>${v}</b><small>${k}</small></div>`).join("")}</div>
       <div class="p-meta"><span>Total <b>${Math.round(G.xp).toLocaleString()} XP</b></span><span>Lifted <b>${Math.round(G.lifts.lbs).toLocaleString()} lb</b></span><span>Road <b>${(Math.round(G.miles * 10) / 10)} mi</b></span></div>`;
@@ -60,6 +70,7 @@ export const CFG = {
     { id: "ember-sentinel", name: "The Ember Sentinel", icon: "🔥", desc: "Hold a 21-day streak.", metric: "bestStreak", target: 21, unit: "days", xp: 400 },
     { id: "utah-colossus", name: "Utah Summit Colossus", icon: "⛰️", desc: "Climb the 100-mile mountain together — your miles plus Madi's.", metric: "duoMi", target: 100, unit: "mi", xp: 800, duo: true },
     { id: "titan", name: "Titan of 100,000 Stones", icon: "🪨", desc: "Lift 100,000 lb between the two of you.", metric: "duoLb", target: 100000, unit: "lb", xp: 800, duo: true },
+    ...LIFE_BOSSES,
   ],
   loot: [
     { id: "l-sword", name: "Wooden Sword", icon: "🗡️", title: "Fresh Hunter", how: "Clear your first workout", when: (m) => m.gymDays >= 1 },
@@ -79,6 +90,7 @@ export const CFG = {
     { id: "l-titan", name: "Titan's Ring", icon: "💍", title: "Titanbound", how: "Beat the Titan", boss: "titan", when: (m) => !!m.earned.titan },
     { id: "l-slate", name: "Spirit Slate", icon: "🔷", title: "Awakened", how: "Reach LV 20", when: (m) => m.level >= 20 },
     { id: "l-crown", name: "Crown of Stars", icon: "👑", title: "Star-Crowned", how: "Reach LV 40", when: (m) => m.level >= 40 },
+    ...LIFE_LOOT,
   ],
 
   bossPopup: (b, loot) => `<p class="ov-k">[ SYSTEM ]</p><div class="ov-icon">${b.icon}</div><h2 class="ov-h">GATE CLEARED</h2>
@@ -90,7 +102,7 @@ export const CFG = {
   text: {
     toastTag: "[SYSTEM]", popupOk: "Continue", statusTag: "Status", lv: "LV.",
     noTitle: "No title yet — clear gates to earn one", titlesHead: "Titles", noTitlesYet: "Clear gates and collect loot to unlock titles.", titleEquipped: "Title equipped",
-    streakLabel: "Daily streak", streakDone: "Today counts ✓", streakTodo: "Train, log cardio or finish mobility to keep it",
+    streakLabel: "Training streak", streakDone: "Today counts ✓", streakTodo: "Train, log cardio or finish mobility to keep it",
     questHead: "[ DAILY QUEST ]", questSub: "Clear every task before midnight", questClear: "QUEST CLEARED",
     questTrain: "Clear today's training", questRest: "Recovery day: walk + mobility", questMobility: "Finish the mobility quest", questWeigh: "Weigh in", questCalories: "Log calories from Lifesum",
     mobHead: "Mobility quest", mobDone: "Mobility quest complete!",

@@ -246,7 +246,11 @@ export function compute(state, cfg, plan, today = ymd()) {
   // permanent rewards
   const bossXP = cfg.bosses.filter((b) => state.earned[b.id]).reduce((s, b) => s + b.xp, 0);
 
-  const xp = Math.round(
+  // optional app extension (ARISE life modules): extra metrics + XP
+  const life = cfg.extend ? cfg.extend(state, today, { train, cardioByDay, liftDay, mobDay, plan }) : null;
+  if (life) Object.assign(metrics, life.metrics || {});
+
+  const xp = Math.round((life?.xp || 0) +
     state.weights.length * XP.weighIn + checks * XP.check + gymDays * XP.gym + restDays * XP.restDay +
     lifts.sets * XP.set + lifts.prs * XP.pr + calLogs.length * XP.cal + calOnTarget * XP.calOnTarget +
     cardioXP_ + mobMoves * XP.move + mobFullDays * XP.mobilityBonus + weeksHit.length * XP.weekGoal + questDays * XP.quest + bossXP);
@@ -262,7 +266,7 @@ export function compute(state, cfg, plan, today = ymd()) {
     xp, ...L, rank: rankOf(cfg.ranks, L.level), metrics, bosses,
     lifts, items, train, cardioByDay, miles, togetherMi, runMi, walkMi, cardioXP: cardioXP_,
     mobDay, moves, mobFullDays, streak, goalMi, weekMi, thisWeek, weeksHit, weekStreak,
-    questsFor, questDays, body, checks, gymDays, restDays, calLogs: calLogs.length,
+    questsFor, questDays, body, checks, gymDays, restDays, calLogs: calLogs.length, life, liftDay,
   };
 }
 
