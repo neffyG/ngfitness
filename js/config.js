@@ -26,8 +26,21 @@ export const CFG = {
     { id: "body", label: "Body", icon: "heart" },
     { id: "habits", label: "Habits", icon: "status", hidden: true, navAs: "home" },
     { id: "report", label: "Report", icon: "status", hidden: true, navAs: "home" },
+    { id: "reader", label: "Bible", icon: "cross", hidden: true, navAs: "faith" },
   ],
   extend: (state, today, ext) => lifeCompute(state, today, ext),
+  faith: {
+    head: "[ THE WORD ]", walk: "Your walk",
+    focus: [
+      "Your church, your pastor and the Lord's day",
+      "Your family — parents, brother and the people at home",
+      "Madi and your relationship",
+      "Your work, your coworkers and the patients you serve",
+      "Friends, and anyone who doesn't know God yet",
+      "Your city, the nation and its leaders",
+      "Your own heart — growth, discipline and what's next",
+    ],
+  },
   ranks: [
     { name: "E-Rank Hunter", r: "E", min: 1, c: "#A9B6CE" },
     { name: "D-Rank Hunter", r: "D", min: 6, c: "#8FD18B" },

@@ -2,7 +2,7 @@
 import { ymd, addDays, weekStart, parse, between } from "./engine.js";
 import { LXP, LINKS, DEFAULT_HABITS, habitList, weekSummary, uid } from "./life.js";
 import { chName } from "./bible.js";
-import { esNames } from "./faith-ui.js";
+import { esNames } from "./faith.js";
 import { hardCheck } from "./hard-ui.js";
 
 const DOW = ["S", "M", "T", "W", "T", "F", "S"];

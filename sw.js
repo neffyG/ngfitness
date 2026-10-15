@@ -1,7 +1,7 @@
 // Offline cache. Bump VERSION whenever you change files so your phone picks up the update.
-const VERSION = "fit-v4";
-const FILES = ["./", "index.html", "css/base.css", "css/theme.css", "css/life.css", "js/main.js", "js/core.js", "js/engine.js", "js/plan.js", "js/figures.js", "js/config.js", "js/workouts.js",
-  "js/life.js", "js/bible.js", "js/faith-ui.js", "js/books-ui.js", "js/hard-ui.js", "js/life-ui.js", "manifest.json", "icons/icon-180.png", "icons/icon-192.png"];
+const VERSION = "fit-v5";
+const FILES = ["./", "index.html", "css/base.css", "css/theme.css", "css/faith.css", "css/life.css", "js/main.js", "js/core.js", "js/engine.js", "js/plan.js", "js/figures.js", "js/config.js", "js/workouts.js",
+  "js/life.js", "js/bible.js", "js/faith.js", "js/books-ui.js", "js/hard-ui.js", "js/life-ui.js", "manifest.json", "icons/icon-180.png", "icons/icon-192.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(VERSION).then((c) => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener("activate", (e) => {
   e.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith("fit-") && k !== VERSION).map((k) => caches.delete(k)))));
@@ -11,6 +11,11 @@ self.addEventListener("activate", (e) => {
 // book searches and covers go straight to the internet.
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  // Bible text never changes: serve it from its own cache (kept across app updates) so it works offline
+  if (new URL(e.request.url).pathname.includes("/bible/")) {
+    e.respondWith(caches.open("bible-v1").then((c) => c.match(e.request).then((hit) => hit || fetch(e.request).then((res) => { if (res.ok) c.put(e.request, res.clone()); return res; }))));
+    return;
+  }
   const u = new URL(e.request.url);
   const mine = u.origin === location.origin || /fonts\.(googleapis|gstatic)\.com$/.test(u.hostname) || /covers\.openlibrary\.org$/.test(u.hostname);
   if (!mine) return;

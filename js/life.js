@@ -1,10 +1,10 @@
 // ARISE life modules — Faith, Books, 75 Hard, Habits.
 // lifeCompute() is plugged into the shared engine (cfg.extend) so these feed XP, levels, gates and loot.
 import { ymd, addDays, between, weekStart, parse } from "./engine.js";
-import { BOOK, GOSPELS, TOTAL_CH, planOrder, BOOKS } from "./bible.js";
+import { computeFaith, FAITH_DEFAULTS, FXP, streakBack, bestRun } from "./faith.js";
 
 export const LXP = {
-  chapter: 10, soap: 10, prayerDay: 15, prayerMinCap: 15, grat: 5, church: 25, answered: 20, verse: 25,
+  ...FXP,
   page: 0.5, bookDone: 100, review: 15, rating: 5, quote: 3,
   habit: 5, habitsAll: 10,
   hardTask: 4, hardPerfect: 40, penaltyPaid: 15,
@@ -40,7 +40,7 @@ export const DEFAULT_HABITS = [
 export const LINKS = { prayer: "Logs itself when you pray in Faith", bible: "Logs itself when you read today's chapter", grat: "Logs itself from Faith › gratitude", pages: "Logs itself from your reading sessions", water: "Logs itself from your 75 Hard water", train: "Logs itself when you clear today's training" };
 
 export const LIFE_DEFAULTS = {
-  faith: { tr: "NIV", app: "bg", plan: "path", goal: 1, pass: 1, reads: [], prayer: {}, requests: [], grat: {}, church: {}, mem: [], es: null },
+  faith: FAITH_DEFAULTS,
   books: { list: [], goals: {}, timer: null },
   hard: { rounds: [], log: {}, paid: {}, ack: [], pen: null, bibleCounts: true, oz: 128, pageCh: 3 },
   habits: { list: null, log: {} },
@@ -52,21 +52,6 @@ export const habitList = (state) => state.habits.list || DEFAULT_HABITS;
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 export { uid };
 
-/* ---------- helpers ---------- */
-function streakBack(isDone, today, maxBack = 800) {
-  // consecutive days ending today (or yesterday, if today isn't done yet)
-  let d = isDone(today) ? today : addDays(today, -1), n = 0;
-  while (n < maxBack && isDone(d)) { n++; d = addDays(d, -1); }
-  return n;
-}
-function bestRun(days, isDone) {
-  if (!days.length) return 0;
-  const first = days.sort()[0], last = ymd();
-  let run = 0, best = 0;
-  for (let d = first, i = 0; d <= last && i < 3000; d = addDays(d, 1), i++) { if (isDone(d)) { run++; best = Math.max(best, run); } else run = 0; }
-  return best;
-}
-
 /* =========================================================
    lifeCompute — called by the engine on every render
    ========================================================= */
@@ -75,40 +60,10 @@ export function lifeCompute(state, today = ymd(), ext = {}) {
   const train = ext.train || {}, cardioByDay = ext.cardioByDay || {};
   let xp = 0;
 
-  /* ---------- faith ---------- */
-  const reads = F.reads || [];
-  const uniq = new Set(reads.map((r) => r.k));
-  const passSet = new Set(reads.filter((r) => (r.p || 1) === F.pass).map((r) => r.k));
-  const order = planOrder(F.plan);
-  const next = order.find((k) => !passSet.has(k)) || null;
-  const chByDay = {};
-  reads.forEach((r) => (chByDay[r.d] = (chByDay[r.d] || 0) + 1));
-  const goal = Math.max(1, F.goal || 1);
-  const wordDone = (d) => (chByDay[d] || 0) >= goal;
-  const prayed = (d) => !!F.prayer[d];
-  const thankful = (d) => (F.grat[d] || []).some((x) => x && x.trim());
-  const soap = reads.filter((r) => r.n && Object.values(r.n).some((x) => x && String(x).trim())).length;
-  const prayerDays = Object.keys(F.prayer).length;
-  const prayerMin = Object.values(F.prayer).reduce((s, p) => s + (p.min || 0), 0);
-  const answered = F.requests.filter((r) => r.ans).length;
-  const memMastered = F.mem.filter((m) => (m.box || 0) >= 5).length;
-  const gratDays = Object.keys(F.grat).filter(thankful).length;
-  const churchDays = Object.keys(F.church).length;
-  const bookCh = {};
-  uniq.forEach((k) => { const id = k.split(".")[0]; bookCh[id] = (bookCh[id] || 0) + 1; });
-  const booksDone = BOOKS.filter((b) => (bookCh[b.id] || 0) >= b.ch).length;
-  const sumCh = (pred) => Object.entries(bookCh).filter(([id]) => pred(id)).reduce((s, [, n]) => s + n, 0);
-  const faith = {
-    next, passDone: !next, passCount: passSet.size, uniq, bookCh, chByDay, chToday: chByDay[today] || 0, goal,
-    wordStreak: streakBack(wordDone, today), bestWord: bestRun(Object.keys(chByDay), wordDone),
-    prayerStreak: streakBack(prayed, today), bestPrayer: bestRun(Object.keys(F.prayer), prayed),
-    prayedToday: prayed(today), prayerDays, prayerMin, answered, memMastered, gratDays, churchDays, soap, booksDone,
-    totalCh: uniq.size, pct: (uniq.size / TOTAL_CH) * 100,
-    gospelCh: sumCh((id) => GOSPELS.includes(id)), psalmCh: bookCh.PSA || 0, ntCh: sumCh((id) => BOOK[id].nt), otCh: sumCh((id) => !BOOK[id].nt),
-    thankfulToday: thankful(today), wordDone, prayed, thankful,
-  };
-  xp += reads.length * LXP.chapter + soap * LXP.soap + gratDays * LXP.grat + churchDays * LXP.church + answered * LXP.answered + memMastered * LXP.verse;
-  xp += Object.values(F.prayer).reduce((s, p) => s + LXP.prayerDay + Math.min(LXP.prayerMinCap, Math.floor((p.min || 0) / 2)), 0);
+  /* ---------- faith (shared module) ---------- */
+  const FC = computeFaith(state, today), faith = FC.faith;
+  const { chByDay, wordDone, prayed, thankful } = faith;
+  xp += FC.xp;
 
   /* ---------- books ---------- */
   const pagesByDay = {}, nonficByDay = {}, minByDay = {};
@@ -230,10 +185,10 @@ export function lifeCompute(state, today = ymd(), ext = {}) {
   const habits = { list, stats: habitStats, hval, hdone, sched, target, allHabitsDay, bestHabit, fullHabitDays };
 
   const metrics = {
-    bibleCh: uniq.size, gospelCh: faith.gospelCh, psalmCh: faith.psalmCh, ntCh: faith.ntCh, bestWord: faith.bestWord, prayerDays, answered, memMastered, gratDays,
+    ...FC.metrics,
     booksRead: finishes, longestRead: longest, bestYearBooks: books.bestYear, pagesRead: pages, bestReadStreak: books.bestRead,
     hardCleared: hard.bestCleared, hardPerfect: hard.bestPerfect, penaltiesPaid: paidCount, hardStarted: rounds.length ? 1 : 0,
-    bestHabit, fullHabitDays, chapters: reads.length, soap,
+    bestHabit, fullHabitDays,
   };
   return { xp, metrics, faith, books, hard, habits };
 }

@@ -26,11 +26,40 @@ export const BOOK = Object.fromEntries(BOOKS.map((b) => [b.id, b]));
 export const TOTAL_CH = BOOKS.reduce((s, b) => s + b.ch, 0); // 1189
 export const GOSPELS = ["MAT", "MRK", "LUK", "JHN"];
 
+// Built into the app (public domain, works offline): KJV, BSB, RV1909.
+// NIV and RVR1960 are copyrighted, so those open online instead.
 export const TRANSLATIONS = {
-  KJV: { name: "King James Version", yv: 1, es: false },
-  NIV: { name: "New International Version", yv: 111, es: false },
-  RVR1960: { name: "Reina-Valera 1960", yv: 149, es: true },
+  KJV: { name: "King James Version", file: "kjv", es: false },
+  BSB: { name: "Berean Standard Bible", file: "bsb", es: false },
+  RV1909: { name: "Reina-Valera 1909", file: "rv1909", es: true },
+  NIV: { name: "New International Version", link: true, es: false, yv: 111 },
+  RVR1960: { name: "Reina-Valera 1960", link: true, es: true, yv: 149 },
 };
+export const BUILT_IN = ["BSB", "KJV", "RV1909"];
+
+// load one book of a built-in translation (chapters → verses); cached in memory, and by the service worker for offline
+const cache = new Map();
+export function loadBook(tr, id) {
+  const key = `${tr}/${id}`;
+  if (!cache.has(key)) cache.set(key, fetch(`bible/${TRANSLATIONS[tr].file}/${id}.json`).then((r) => { if (!r.ok) throw new Error("missing"); return r.json(); }).catch((e) => { cache.delete(key); throw e; }));
+  return cache.get(key);
+}
+export async function loadChapter(tr, k) { const [id, c] = k.split("."); const b = await loadBook(tr, id); return b[+c - 1] || []; }
+
+// "Proverbs 3:5-6" → { id: "PRO", c: 3, v1: 5, v2: 6 }
+const NAME_TO_ID = (() => { const m = {}; for (const [id, en, es] of RAW) { m[en.toLowerCase()] = id; m[es.toLowerCase()] = id; } m.psalm = "PSA"; m["song of solomon"] = "SNG"; return m; })();
+export function parseRef(ref) {
+  const m = String(ref).trim().match(/^(.+?)\s+(\d+):(\d+)(?:-(\d+))?/);
+  if (!m) return null;
+  const id = NAME_TO_ID[m[1].toLowerCase()]; if (!id) return null;
+  return { id, c: +m[2], v1: +m[3], v2: +(m[4] || m[3]) };
+}
+export async function loadRef(tr, ref) {
+  const r = parseRef(ref); if (!r) return null;
+  const ch = await loadChapter(tr, `${r.id}.${r.c}`);
+  return ch.slice(r.v1 - 1, r.v2).join(" ");
+}
+export const refLabel = (ref, es) => { const r = parseRef(ref); if (!r || !es) return ref; return ref.replace(/^.+?(?=\s+\d+:)/, BOOK[r.id].es); };
 
 export const PLANS = {
   path: { name: "Start with Jesus", sub: "Gospels → rest of the New Testament → Psalms & Proverbs → Old Testament" },
@@ -59,16 +88,6 @@ export function refUrl(ref, tr = "NIV") {
   return `https://www.biblegateway.com/passage/?search=${encodeURIComponent(ref)}&version=${tr}`;
 }
 
-// weekly prayer focus (Sunday = 0)
-export const PRAYER_FOCUS = [
-  "Your church, your pastor and the Lord's day",
-  "Your family — parents, brother and the people at home",
-  "Madi and your relationship",
-  "Your work, your coworkers and the patients you serve",
-  "Friends, and anyone who doesn't know God yet",
-  "Your city, the nation and its leaders",
-  "Your own heart — growth, discipline and what's next",
-];
 export const ACTS = [
   ["Adoration", "Praise God for who He is."],
   ["Confession", "Be honest about where you fell short."],
